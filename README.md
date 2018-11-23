@@ -1,1 +1,1 @@
-ocr-test-reader
+#Project OCR test reader

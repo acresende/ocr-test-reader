@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#Generated images
+*.png
+*.jpg
+
 # C extensions
 *.so
 
@@ -23,6 +27,8 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+temp/
+images/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
