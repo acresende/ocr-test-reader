@@ -1,12 +1,18 @@
 # import the necessary packages
 from PIL import Image
 import pytesseract
-import argparse
 import cv2
 import os
 import json
-import pprint
- 
+from imutils.perspective import four_point_transform
+from imutils import contours
+import numpy as np
+import argparse
+import imutils
+
+import tifTojpg
+
+'''
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -16,73 +22,50 @@ ap.add_argument("-p", "--preprocess", type=str, default="thresh",
     help="type of preprocessing to be done")
 
 args = vars(ap.parse_args())
-
+'''
 
 yourpath = r'C:/Projects/ocrtest/images/'
 
-#convert image to jpeg
+# convert image to jpeg
 
-for root, dirs, files in os.walk(yourpath, topdown=False):
-    for name in files:
-        print(os.path.join(root, name))
-        if os.path.splitext(os.path.join(root, name))[1].lower() == ".tif":
-            if os.path.isfile(os.path.splitext(os.path.join(root, name))[0] + ".jpg"):
-                print ("A jpeg file already exists for %s" % name)
-            # If a jpeg is *NOT* present, create one from the tiff.
-            else:
-                outfile = os.path.splitext(os.path.join(root, name))[0] + ".jpg"
-                try:
-                    im = Image.open(os.path.join(root, name))
-                    print ("Generating jpeg for %s" % name)
-                    im.thumbnail(im.size)
-                    im.save(outfile, "JPEG", quality=100)
-                except Exception as e:
-                    print (e)
+filepath = tifTojpg.tif_jpg_converter(yourpath)
 
-image = Image.open(r'C:/Projects/ocrtest/images/test.jpg')
+image = Image.open(filepath)
 
-
-
-
+'''
 #load the example image and convert it to grayscale
 image = cv2.imread(args["image"])
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
- 
+
 # check to see if we should apply thresholding to preprocess the
 # image
 if args["preprocess"] == "thresh":
     gray = cv2.threshold(gray, 0, 255,
         cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
- 
+
 # make a check to see if median blurring should be done to remove
 # noise
 elif args["preprocess"] == "blur":
     gray = cv2.medianBlur(gray, 3)
- 
+
 # write the grayscale image to disk as a temporary file so we can
 # apply OCR to it
 filename = "{}.png".format(os.getpid())
-cv2.imwrite(filename, gray)
-
+path = "images/"
+cv2.imwrite(os.path.join(path, filename), gray)
+'''
 
 # load the image as a PIL/Pillow image, apply OCR, and then delete
 # the temporary file
-
 
 
 image = Image.open(r'C:/Projects/ocrtest/images/test.jpg')
 
 # text = pytesseract.image_to_string(image, lang='por')
 data = pytesseract.image_to_data(image, lang='por', output_type=dict)
-#os.remove(filename)
-
-
-
-print('\n')
-# print('=============================================================')
-print('\n')
+# os.remove(filename)
 
 
 # opens json containing keywords that define regions of test
@@ -114,17 +97,17 @@ x1--------x2
 x3--------x4
 '''
 for element in data_matrix:
-    x1 = int(element[6]) #- widthOffset
+    x1 = int(element[6])  # - widthOffset
     y1 = int(element[7])
 
-    x2 = int(element[6]) + int(element[8]) #+ widthOffset
+    x2 = int(element[6]) + int(element[8])  # + widthOffset
     y2 = int(element[7])
 
     x3 = int(element[6])
-    y3 = int(element[7]) + int(element[9]) # + heightOffset
+    y3 = int(element[7]) + int(element[9])  # + heightOffset
 
     x4 = int(element[6]) + int(element[8])
-    y4 = int(element[7]) + int(element[9]) # + heightOffset
+    y4 = int(element[7]) + int(element[9])  # + heightOffset
 
     jsonData['region'].append({
         'upperLeftBoundX': str(x1),
@@ -137,19 +120,33 @@ for element in data_matrix:
         'bottomRightBoundY': str(y4)
     })
 
-    regions_matrix = [x1, y1, x2, ]
+# define each region based on points
 
+'''
+index = 0
+for entry in jsonData['region']:
 
+    vertexGlobalX1 = 1
+    vertexGlobalY2 = entry['upperLeftBoundY']
+    if entry[]
+        vertexGlobalX4 = jsonData['region'][index+1]['upperLeftBoundX']
+    vertexGlobalX4 = jsonData['region'][index+1]['upperLeftBoundY']
 
-cv2.rectangle(image, (x1, y1), (x4, y4), (255, 0, 0), 2)
+    jsonData['regionGlobal'].append({
+        'upperLeftBoundX': "1",
+        'upperLeftBoundY': entry['upperLeftBoundY'], # the same value as right upper bound but left each with their designations for clarity
+        'bottomRightBoundX':  image.shape.width,
+        'bottomRightBoundY': jsonData['region'][index+1]['upperLeftBoundY']
+    })
+    index += 1
 
+    cv2.rectangle(image, (vertexGlobalX1, vertexGlobalY2), (vertexGlobalX4, vertexGlobalX4), (255, 0, 0), 2)
+'''
 
 with open('outputBounds.json', 'w') as outfile:
     json.dump(jsonData, outfile)
 
 cv2.imwrite("layoutOutput.png", image)
-
-
 
 # show the output images
 # cv2.imshow("Image", image)
